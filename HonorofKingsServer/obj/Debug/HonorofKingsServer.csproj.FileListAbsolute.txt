@@ -1,0 +1,10 @@
+E:\StudyData\Unity\Network\MOBA\Projects\HonorofKingsServer\bin\Debug\HonorofKingsServer.exe.config
+E:\StudyData\Unity\Network\MOBA\Projects\HonorofKingsServer\bin\Debug\HonorofKingsServer.exe
+E:\StudyData\Unity\Network\MOBA\Projects\HonorofKingsServer\bin\Debug\HonorofKingsServer.pdb
+E:\StudyData\Unity\Network\MOBA\Projects\HonorofKingsServer\bin\Debug\Newtonsoft.Json.dll
+E:\StudyData\Unity\Network\MOBA\Projects\HonorofKingsServer\bin\Debug\Newtonsoft.Json.xml
+E:\StudyData\Unity\Network\MOBA\Projects\HonorofKingsServer\obj\Debug\HonorofKingsServer.csproj.AssemblyReference.cache
+E:\StudyData\Unity\Network\MOBA\Projects\HonorofKingsServer\obj\Debug\HonorofKingsServer.csproj.CoreCompileInputs.cache
+E:\StudyData\Unity\Network\MOBA\Projects\HonorofKingsServer\obj\Debug\HonorofKingsServer.csproj.CopyComplete
+E:\StudyData\Unity\Network\MOBA\Projects\HonorofKingsServer\obj\Debug\HonorofKingsServer.exe
+E:\StudyData\Unity\Network\MOBA\Projects\HonorofKingsServer\obj\Debug\HonorofKingsServer.pdb

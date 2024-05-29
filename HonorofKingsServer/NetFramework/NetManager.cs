@@ -1,3 +1,4 @@
+using ProtoBuf;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -88,6 +89,7 @@ public static class NetManager
         if (readBuffer.Remain <= 0)
         {
             Console.WriteLine("Receive 失败，数组不够大");
+            Close(state);
             return;
         }
         int count = 0;
@@ -99,12 +101,14 @@ public static class NetManager
         {
 
             Console.WriteLine("Rceive 失败，"+e.Message);
+            Close(state);
             return;
         }
 
         if(count <= 0)
         {
             Console.WriteLine("Socket Close:"+socket.RemoteEndPoint.ToString());
+            Close(state);
             return;
         }
 
@@ -133,16 +137,17 @@ public static class NetManager
         readBuffer.readIndex += 2;
 
         int nameCount = 0;
-        string protoName = MsgBase.DecodeName(readBuffer.bytes, readBuffer.readIndex, out nameCount);
+        string protoName = ProtoBufTool.DecodeName(readBuffer.bytes, readBuffer.readIndex, out nameCount);
         if(protoName == "")
         {
             Console.WriteLine("OnReceiveData 失败，协议名为空");
+            Close(state);
             return;
         }
         readBuffer.readIndex += nameCount;
 
         int bodyLength = length - nameCount;
-        MsgBase msgBase = MsgBase.Decode(protoName, readBuffer.bytes, readBuffer.readIndex, bodyLength);
+        IExtensible msgBase = ProtoBufTool.Decode(protoName, readBuffer.bytes, readBuffer.readIndex, bodyLength);
 
         readBuffer.readIndex += bodyLength;
         readBuffer.MoveBytes();
@@ -177,14 +182,14 @@ public static class NetManager
     /// </summary>
     /// <param name="state"></param>
     /// <param name="msgBase"></param>
-    public static void Send(ClientState state,MsgBase msgBase)
+    public static void Send(ClientState state,IExtensible msgBase)
     {
         if (state == null || !state.socket.Connected)
             return;
 
         //编码
-        byte[] nameBytes = MsgBase.EncodeName(msgBase);
-        byte[] bodyBytes = MsgBase.Encode(msgBase);
+        byte[] nameBytes = ProtoBufTool.EncodeName(msgBase);
+        byte[] bodyBytes = ProtoBufTool.Encode(msgBase);
         int len = nameBytes.Length + bodyBytes.Length;
         byte[] sendBytes = new byte[len + 2];
         sendBytes[0] = (byte)(len % 256);

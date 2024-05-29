@@ -1,8 +1,10 @@
+using ProtoBuf;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
+using System.Reflection;
 using UnityEngine;
 
 public static class NetManager
@@ -20,7 +22,7 @@ public static class NetManager
     /// <summary>
     /// 消息列表
     /// </summary>
-    private static List<MsgBase> msgList;
+    private static List<IExtensible> msgList;
 
     /// <summary>
     /// 是否正在连接
@@ -134,7 +136,7 @@ public static class NetManager
     /// 消息处理委托
     /// </summary>
     /// <param name="msgBase">消息</param>
-    public delegate void MsgListener(MsgBase msgBase);
+    public delegate void MsgListener(IExtensible msgBase);
 
     /// <summary>
     /// 消息事件字典
@@ -180,7 +182,7 @@ public static class NetManager
     /// </summary>
     /// <param name="msgName">事件名字</param>
     /// <param name="msgBase"></param>
-    public static void FireMsg(string msgName, MsgBase msgBase)
+    public static void FireMsg(string msgName, IExtensible msgBase)
     {
         if (msgListeners.ContainsKey(msgName))
         {
@@ -195,7 +197,7 @@ public static class NetManager
     {
         socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         byteArray = new ByteArray();
-        msgList = new List<MsgBase>();
+        msgList = new List<IExtensible>();
         isConnecting = false;
         isClosing = false;
         writeQueue = new Queue<ByteArray>();
@@ -335,7 +337,7 @@ public static class NetManager
             return;
         byteArray.readIndex += 2;
         int nameCount = 0;
-        string protoName = MsgBase.DecodeName(byteArray.bytes, byteArray.readIndex, out nameCount);
+        string protoName = ProtoBufTool.DecodeName(byteArray.bytes, byteArray.readIndex, out nameCount);
         if (protoName == "")
         {
             Debug.Log("协议名解析失败");
@@ -347,9 +349,10 @@ public static class NetManager
 
         //解析协议体
         int bodyLength = length - nameCount;
-        MsgBase msgBase = MsgBase.Decode(protoName, byteArray.bytes, byteArray.readIndex, bodyLength);
+        IExtensible msgBase = ProtoBufTool.Decode(protoName, byteArray.bytes, byteArray.readIndex, bodyLength);
         byteArray.readIndex += bodyLength;
-        Debug.Log("msg:" + msgBase.protoName);
+
+        Debug.Log("msg:" + protoName);
         //移动数据
         byteArray.MoveBytes();
         lock (msgList)
@@ -371,7 +374,7 @@ public static class NetManager
     /// 发送协议
     /// </summary>
     /// <param name="msg"></param>
-    public static void Send(MsgBase msg)
+    public static void Send(IExtensible msg)
     {
         if (socket == null || !socket.Connected)
             return;
@@ -381,8 +384,8 @@ public static class NetManager
             return;
 
         //编码
-        byte[] nameBytes = MsgBase.EncodeName(msg);
-        byte[] bodyBytes = MsgBase.Encode(msg);
+        byte[] nameBytes = ProtoBufTool.EncodeName(msg);
+        byte[] bodyBytes = ProtoBufTool.Encode(msg);
         int len = nameBytes.Length + bodyBytes.Length;
         byte[] sendBytes = new byte[len + 2];
         sendBytes[0] = (byte)(len % 256);
@@ -456,7 +459,7 @@ public static class NetManager
             return;
         for (int i = 0; i < processMsgCount; i++)
         {
-            MsgBase msgBase = null;
+            IExtensible msgBase = null;
             lock (msgList)
             {
                 if (msgList.Count > 0)
@@ -467,8 +470,10 @@ public static class NetManager
             }
             if (msgBase != null)
             {
-                FireMsg(msgBase.protoName, msgBase);
-                Debug.Log(msgBase.protoName);
+                PropertyInfo info = msgBase.GetType().GetProperty("protoName");
+                string protoName = info.GetValue(msgBase).ToString();
+                FireMsg(protoName, msgBase);
+                Debug.Log(protoName);
             }
             else
             {
@@ -503,7 +508,7 @@ public static class NetManager
         MsgUpdate();
     }
 
-    private static void OnMsgPong(MsgBase msgBase)
+    private static void OnMsgPong(IExtensible msgBase)
     {
         lastPongTime = Time.time;
     }

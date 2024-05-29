@@ -88,6 +88,7 @@ public static class NetManager
         if (readBuffer.Remain <= 0)
         {
             Console.WriteLine("Receive 失败，数组不够大");
+            Close(state);
             return;
         }
         int count = 0;
@@ -99,12 +100,14 @@ public static class NetManager
         {
 
             Console.WriteLine("Rceive 失败，"+e.Message);
+            Close(state);
             return;
         }
 
         if(count <= 0)
         {
             Console.WriteLine("Socket Close:"+socket.RemoteEndPoint.ToString());
+            Close(state);
             return;
         }
 
@@ -137,6 +140,7 @@ public static class NetManager
         if(protoName == "")
         {
             Console.WriteLine("OnReceiveData 失败，协议名为空");
+            Close(state);
             return;
         }
         readBuffer.readIndex += nameCount;
